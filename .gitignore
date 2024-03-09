@@ -3,6 +3,9 @@ build-*
 sdcard/*
 !sdcard/*.cfg
 !sdcard/*.txt
+external/*
+
+
 
 # Kernel files
 *.elf

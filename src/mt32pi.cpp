@@ -124,6 +124,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 	s_pThis = this;
 }
 
+
 CMT32Pi::~CMT32Pi()
 {
 }
@@ -1400,3 +1401,22 @@ void CMT32Pi::PanicHandler()
 	nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pMessage);
 	s_pThis->m_pLCD->Print(pMessage, nOffsetX, 1, true, true);
 }
+
+
+void CMT32Pi::SetSoundFontPatch(s32 nVolume)
+{
+	unsigned int bank;
+	unsigned int prog;
+	unsigned int preset;
+	
+	// Get current patch from fluid_synth_get_program
+	fluid_synth_get_program(synth, 0, &bank, &prog, &preset);
+
+    // Use fluid_synth_program_select to select a patch
+    fluid_synth_program_select(synth, 0, 0, 0, nVolume);
+
+	// If the patch is not available, use fluid_synth_program_select with a default patch
+
+}
+	
+	

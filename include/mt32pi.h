@@ -135,6 +135,7 @@ private:
 	void SwitchSoundFont(size_t nIndex);
 	void DeferSwitchSoundFont(size_t nIndex);
 	void SetMasterVolume(s32 nVolume);
+	void SetSoundFontPatch(s32 nPatch);
 
 	const char* GetNetworkDeviceShortName() const;
 	void LEDOn();

@@ -44,8 +44,9 @@ public:
 	virtual bool IsActive() override;
 	virtual void AllSoundOff() override;
 	virtual void SetMasterVolume(u8 nVolume) override;
-	virtual size_t Render(s16* pOutBuffer, size_t nFrames) override;
-	virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
+    virtual void SetSoundFontPatch(s32 nPatch, s32 nChannel, s32 nBank);
+    virtual size_t Render(s16 *pOutBuffer, size_t nFrames) override;
+    virtual size_t Render(float* pOutBuffer, size_t nFrames) override;
 	virtual void ReportStatus() const override;
 	virtual void UpdateLCD(CLCD& LCD, unsigned int nTicks) override;
 
@@ -71,6 +72,7 @@ private:
 
 	u16 m_nPercussionMask;
 	size_t m_nCurrentSoundFontIndex;
+	size_t m_nCurrentSoundFontProgramIndex;
 
 	CSoundFontManager m_SoundFontManager;
 

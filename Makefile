@@ -163,3 +163,6 @@ mrproper: clean
 
 # Clean FluidSynth
 	@$(RM) -r $(FLUIDSYNTHBUILDDIR)
+
+# Clean submodules
+	@$(RM) -r external/*

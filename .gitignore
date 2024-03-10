@@ -3,6 +3,9 @@ build-*
 sdcard/*
 !sdcard/*.cfg
 !sdcard/*.txt
+external/*
+
+
 
 # Kernel files
 *.elf
@@ -52,3 +55,6 @@ sdcard/*
 build/
 .DS_Store
 .vscode/
+/*.zip
+mt32-pi-dev/
+sdcard/wpa_supplicant.conf

@@ -56,6 +56,11 @@ enum class TCustomSysExCommand : u8
 	SetMT32ReversedStereo = 0x04,
 };
 
+// Patch number, max 127
+constexpr u8 MaxPatchNumber = 127;
+// Current Patch number
+u8 CurrentPatchNumber = 0;
+
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
 CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
@@ -123,6 +128,7 @@ CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSyste
 {
 	s_pThis = this;
 }
+
 
 CMT32Pi::~CMT32Pi()
 {
@@ -1050,7 +1056,8 @@ void CMT32Pi::ProcessEventQueue()
 				break;
 
 			case TEventType::Encoder:
-				SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
+				// SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
+SetSoundFontPatch(CurrentPatchNumber + Event.Encoder.nDelta);
 				break;
 		}
 	}
@@ -1194,6 +1201,7 @@ void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 
 void CMT32Pi::SetMasterVolume(s32 nVolume)
 {
+// TODO: use this to set the program
 	m_nMasterVolume = Utility::Clamp(nVolume, 0, 100);
 
 	if (m_pMT32Synth)
@@ -1204,6 +1212,17 @@ void CMT32Pi::SetMasterVolume(s32 nVolume)
 	if (m_pCurrentSynth == m_pSoundFontSynth)
 		LCDLog(TLCDLogType::Notice, "Volume: %d", m_nMasterVolume);
 }
+void CMT32Pi::SetSoundFontPatch(s32 nPatch)
+{
+	// Check the range is between 0 and 127, set the max and min values if not
+	if (nPatch < 0) nPatch = 0;
+	if (nPatch > 127) nPatch = 127;
+
+	// Set the patch using fluidsynth library
+	if (m_pSoundFontSynth)
+		m_pSoundFontSynth->SetSoundFontPatch(nPatch, 1, 1);
+}
+
 
 void CMT32Pi::LEDOn()
 {
@@ -1400,3 +1419,8 @@ void CMT32Pi::PanicHandler()
 	nOffsetX = CUserInterface::CenterMessageOffset(*s_pThis->m_pLCD, pMessage);
 	s_pThis->m_pLCD->Print(pMessage, nOffsetX, 1, true, true);
 }
+
+
+
+	
+	

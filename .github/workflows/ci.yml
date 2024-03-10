@@ -1,13 +1,17 @@
 name: mt32-pi CI
 
-# only try to build on main branches and pull requests
+# only try to build on main branches and pull requests and releases
+
 on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'  # Trigger this workflow on push to tags like v1.0, v20.15.10 etc.
   pull_request:
     branches:
       - main
+      
 env:
   toolchain-version: 11.3.rel1
   python-version: 3.11

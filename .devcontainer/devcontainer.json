@@ -10,7 +10,8 @@
 				"ms-vscode.cpptools-extension-pack",
 				"twxs.cmake",
 				"ms-vscode.cmake-tools",
-				"ms-vscode.makefile-tools"
+				"ms-vscode.makefile-tools",
+				"github.vscode-github-actions"
 			]
 		}
 	}

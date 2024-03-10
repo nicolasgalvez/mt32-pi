@@ -55,3 +55,4 @@ external/*
 build/
 .DS_Store
 .vscode/
+/*.zip

@@ -575,7 +575,7 @@ void CMT32Pi::AudioTask()
 
 	// Extra byte so that we can write to the 24-bit buffer with overlapping 32-bit writes (efficiency)
 	float FloatBuffer[nQueueSizeFrames * nChannels];
-	s32 IntBuffer[nQueueSizeFrames * nBytesPerFrame + bI2S ? 0 : 1];
+	s8 IntBuffer[nQueueSizeFrames * nBytesPerFrame + bI2S ? 0 : 1];
 
 	while (m_bRunning)
 	{

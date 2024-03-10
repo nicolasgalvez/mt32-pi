@@ -48,7 +48,7 @@ jobs:
         board: [pi2, pi3-64, pi4-64]
     steps:
     - uses: actions/checkout@v3
-    - run: apt update -y && apt install -y cmake
+    # - run: apt update -y && apt install -y cmake
     - name: Fetch submodules
       run: make submodules
 

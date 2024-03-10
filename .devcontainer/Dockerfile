@@ -19,8 +19,6 @@ RUN mkdir x86_64-arm-none-eabi && tar xfv x86_64-arm-none-eabi.tar.gz -C x86_64-
 
 # remove the archive
 RUN rm aarch.tar.gz
-RUN rm x86_64-arm-none-eabi
-
 
 # add the tools to the path
 ENV PATH="/aarch64-none-elf/bin:${PATH}"

@@ -56,6 +56,11 @@ enum class TCustomSysExCommand : u8
 	SetMT32ReversedStereo = 0x04,
 };
 
+// Patch number, max 127
+constexpr u8 MaxPatchNumber = 127;
+// Current Patch number
+u8 CurrentPatchNumber = 0;
+
 CMT32Pi* CMT32Pi::s_pThis = nullptr;
 
 CMT32Pi::CMT32Pi(CI2CMaster* pI2CMaster, CSPIMaster* pSPIMaster, CInterruptSystem* pInterrupt, CGPIOManager* pGPIOManager, CSerialDevice* pSerialDevice, CUSBHCIDevice* pUSBHCI)
@@ -570,7 +575,7 @@ void CMT32Pi::AudioTask()
 
 	// Extra byte so that we can write to the 24-bit buffer with overlapping 32-bit writes (efficiency)
 	float FloatBuffer[nQueueSizeFrames * nChannels];
-	s8 IntBuffer[nQueueSizeFrames * nBytesPerFrame + bI2S ? 0 : 1];
+	s32 IntBuffer[nQueueSizeFrames * nBytesPerFrame + bI2S ? 0 : 1];
 
 	while (m_bRunning)
 	{
@@ -1051,7 +1056,8 @@ void CMT32Pi::ProcessEventQueue()
 				break;
 
 			case TEventType::Encoder:
-				SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
+				// SetMasterVolume(m_nMasterVolume + Event.Encoder.nDelta);
+SetSoundFontPatch(CurrentPatchNumber + Event.Encoder.nDelta);
 				break;
 		}
 	}
@@ -1195,6 +1201,7 @@ void CMT32Pi::DeferSwitchSoundFont(size_t nIndex)
 
 void CMT32Pi::SetMasterVolume(s32 nVolume)
 {
+// TODO: use this to set the program
 	m_nMasterVolume = Utility::Clamp(nVolume, 0, 100);
 
 	if (m_pMT32Synth)
@@ -1205,6 +1212,17 @@ void CMT32Pi::SetMasterVolume(s32 nVolume)
 	if (m_pCurrentSynth == m_pSoundFontSynth)
 		LCDLog(TLCDLogType::Notice, "Volume: %d", m_nMasterVolume);
 }
+void CMT32Pi::SetSoundFontPatch(s32 nPatch)
+{
+	// Check the range is between 0 and 127, set the max and min values if not
+	if (nPatch < 0) nPatch = 0;
+	if (nPatch > 127) nPatch = 127;
+
+	// Set the patch using fluidsynth library
+	if (m_pSoundFontSynth)
+		m_pSoundFontSynth->SetSoundFontPatch(nPatch, 1, 1);
+}
+
 
 void CMT32Pi::LEDOn()
 {
@@ -1403,20 +1421,6 @@ void CMT32Pi::PanicHandler()
 }
 
 
-void CMT32Pi::SetSoundFontPatch(s32 nVolume)
-{
-	unsigned int bank;
-	unsigned int prog;
-	unsigned int preset;
-	
-	// Get current patch from fluid_synth_get_program
-	fluid_synth_get_program(synth, 0, &bank, &prog, &preset);
 
-    // Use fluid_synth_program_select to select a patch
-    fluid_synth_program_select(synth, 0, 0, 0, nVolume);
-
-	// If the patch is not available, use fluid_synth_program_select with a default patch
-
-}
 	
 	

@@ -39,24 +39,24 @@ const char SoundFontPath[] = "soundfonts";
 extern "C"
 {
 	// Replacements for fluid_sys.c functions
-	void* fluid_alloc(size_t len)
+	void *fluid_alloc(size_t len)
 	{
 		return CZoneAllocator::Get()->Alloc(len, TZoneTag::FluidSynth);
 	}
 
-	void* fluid_realloc(void* ptr, size_t len)
+	void *fluid_realloc(void *ptr, size_t len)
 	{
 		return CZoneAllocator::Get()->Realloc(ptr, len, TZoneTag::FluidSynth);
 	}
 
-	void fluid_free(void* ptr)
+	void fluid_free(void *ptr)
 	{
 		CZoneAllocator::Get()->Free(ptr);
 	}
 
-	FILE* fluid_file_open(const char* path, const char** errMsg)
+	FILE *fluid_file_open(const char *path, const char **errMsg)
 	{
-		FILE* pFile = fopen(path, "rb");
+		FILE *pFile = fopen(path, "rb");
 
 		if (!pFile && errMsg)
 			*errMsg = "Failed to open file";
@@ -69,9 +69,9 @@ extern "C"
 
 	// Replacements for fluid_sfont.c functions
 	// These were found to be much faster than FluidSynth's default approach of going through libc
-	void* default_fopen(const char* path)
+	void *default_fopen(const char *path)
 	{
-		FIL* pFile = new FIL;
+		FIL *pFile = new FIL;
 		if (f_open(pFile, path, FA_READ) != FR_OK)
 		{
 			delete pFile;
@@ -81,9 +81,9 @@ extern "C"
 		return pFile;
 	}
 
-	int default_fclose(void* handle)
+	int default_fclose(void *handle)
 	{
-		FIL* pFile = static_cast<FIL*>(handle);
+		FIL *pFile = static_cast<FIL *>(handle);
 
 		if (f_close(pFile) == FR_OK)
 		{
@@ -94,22 +94,22 @@ extern "C"
 		return FLUID_FAILED;
 	}
 
-	fluid_long_long_t default_ftell(void* handle)
+	fluid_long_long_t default_ftell(void *handle)
 	{
-		FIL* pFile = static_cast<FIL*>(handle);
+		FIL *pFile = static_cast<FIL *>(handle);
 		return f_tell(pFile);
 	}
 
-	int safe_fread(void* buf, fluid_long_long_t count, void* fd)
+	int safe_fread(void *buf, fluid_long_long_t count, void *fd)
 	{
-		FIL* pFile = static_cast<FIL*>(fd);
+		FIL *pFile = static_cast<FIL *>(fd);
 		UINT nRead;
 		return f_read(pFile, buf, count, &nRead) == FR_OK ? FLUID_OK : FLUID_FAILED;
 	}
 
-	int safe_fseek(void* fd, fluid_long_long_t ofs, int whence)
+	int safe_fseek(void *fd, fluid_long_long_t ofs, int whence)
 	{
-		FIL* pFile = static_cast<FIL*>(fd);
+		FIL *pFile = static_cast<FIL *>(fd);
 
 		switch (whence)
 		{
@@ -152,21 +152,21 @@ CSoundFontSynth::~CSoundFontSynth()
 		delete_fluid_settings(m_pSettings);
 }
 
-void CSoundFontSynth::FluidSynthLogCallback(int nLevel, const char* pMessage, void* pUser)
+void CSoundFontSynth::FluidSynthLogCallback(int nLevel, const char *pMessage, void *pUser)
 {
 	CLogger::Get()->Write(From, static_cast<TLogSeverity>(nLevel), pMessage);
 }
 
 bool CSoundFontSynth::Initialize()
 {
-	const CConfig* const pConfig = CConfig::Get();
+	const CConfig *const pConfig = CConfig::Get();
 
 	if (!m_SoundFontManager.ScanSoundFonts())
 		return false;
 
 	// Try to get preferred SoundFont
 	m_nCurrentSoundFontIndex = pConfig->FluidSynthSoundFont;
-	const char* pSoundFontPath = m_SoundFontManager.GetSoundFontPath(m_nCurrentSoundFontIndex);
+	const char *pSoundFontPath = m_SoundFontManager.GetSoundFontPath(m_nCurrentSoundFontIndex);
 
 	// Fall back on first available SoundFont
 	if (!pSoundFontPath)
@@ -205,10 +205,10 @@ bool CSoundFontSynth::Initialize()
 
 void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 {
-	const u8 nStatus  = nMessage & 0xFF;
+	const u8 nStatus = nMessage & 0xFF;
 	const u8 nChannel = nMessage & 0x0F;
-	const u8 nData1   = (nMessage >> 8) & 0xFF;
-	const u8 nData2   = (nMessage >> 16) & 0xFF;
+	const u8 nData1 = (nMessage >> 8) & 0xFF;
+	const u8 nData2 = (nMessage >> 16) & 0xFF;
 
 	// Handle system real-time messages
 	if (nStatus == 0xFF)
@@ -224,40 +224,40 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 	// Handle channel messages
 	switch (nStatus & 0xF0)
 	{
-		// Note off
-		case 0x80:
-			fluid_synth_noteoff(m_pSynth, nChannel, nData1);
-			break;
+	// Note off
+	case 0x80:
+		fluid_synth_noteoff(m_pSynth, nChannel, nData1);
+		break;
 
-		// Note on
-		case 0x90:
-			fluid_synth_noteon(m_pSynth, nChannel, nData1, nData2);
-			break;
+	// Note on
+	case 0x90:
+		fluid_synth_noteon(m_pSynth, nChannel, nData1, nData2);
+		break;
 
-		// Polyphonic key pressure/aftertouch
-		case 0xA0:
-			fluid_synth_key_pressure(m_pSynth, nChannel, nData1, nData2);
-			break;
+	// Polyphonic key pressure/aftertouch
+	case 0xA0:
+		fluid_synth_key_pressure(m_pSynth, nChannel, nData1, nData2);
+		break;
 
-		// Control change
-		case 0xB0:
-			fluid_synth_cc(m_pSynth, nChannel, nData1, nData2);
-			break;
+	// Control change
+	case 0xB0:
+		fluid_synth_cc(m_pSynth, nChannel, nData1, nData2);
+		break;
 
-		// Program change
-		case 0xC0:
-			fluid_synth_program_change(m_pSynth, nChannel, nData1);
-			break;
+	// Program change
+	case 0xC0:
+		fluid_synth_program_change(m_pSynth, nChannel, nData1);
+		break;
 
-		// Channel pressure/aftertouch
-		case 0xD0:
-			fluid_synth_channel_pressure(m_pSynth, nChannel, nData1);
-			break;
+	// Channel pressure/aftertouch
+	case 0xD0:
+		fluid_synth_channel_pressure(m_pSynth, nChannel, nData1);
+		break;
 
-		// Pitch bend
-		case 0xE0:
-			fluid_synth_pitch_bend(m_pSynth, nChannel, (nData2 << 7) | nData1);
-			break;
+	// Pitch bend
+	case 0xE0:
+		fluid_synth_pitch_bend(m_pSynth, nChannel, (nData2 << 7) | nData1);
+		break;
 	}
 
 	m_Lock.Release();
@@ -266,7 +266,7 @@ void CSoundFontSynth::HandleMIDIShortMessage(u32 nMessage)
 	CSynthBase::HandleMIDIShortMessage(nMessage);
 }
 
-void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
+void CSoundFontSynth::HandleMIDISysExMessage(const u8 *pData, size_t nSize)
 {
 	// Return early if it wasn't a GM Mode On/Off message and was consumed as a text/display dots message
 	if (!ParseGMSysEx(pData, nSize) && (ParseRolandSysEx(pData, nSize) || ParseYamahaSysEx(pData, nSize)))
@@ -274,7 +274,7 @@ void CSoundFontSynth::HandleMIDISysExMessage(const u8* pData, size_t nSize)
 
 	// No special handling; forward to FluidSynth SysEx parser, excluding leading 0xF0 and trailing 0xF7
 	m_Lock.Acquire();
-	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char*>(pData + 1), nSize - 2, nullptr, nullptr, nullptr, false);
+	fluid_synth_sysex(m_pSynth, reinterpret_cast<const char *>(pData + 1), nSize - 2, nullptr, nullptr, nullptr, false);
 	m_Lock.Release();
 }
 
@@ -304,8 +304,14 @@ void CSoundFontSynth::SetMasterVolume(u8 nVolume)
 	fluid_synth_set_gain(m_pSynth, m_nVolume / 100.0f * m_nInitialGain);
 	m_Lock.Release();
 }
+void CSoundFontSynth::SetSoundFontPatch(s32 nPatch, s32 nChannel, s32 nBank)
+{
+	m_Lock.Acquire();
+	fluid_synth_program_select(m_pSynth, nChannel, m_nCurrentSoundFontIndex, nBank, nPatch);
+	m_Lock.Release();
+}
 
-size_t CSoundFontSynth::Render(float* pOutBuffer, size_t nFrames)
+size_t CSoundFontSynth::Render(float *pOutBuffer, size_t nFrames)
 {
 	m_Lock.Acquire();
 	assert(fluid_synth_write_float(m_pSynth, nFrames, pOutBuffer, 0, 2, pOutBuffer, 1, 2) == FLUID_OK);
@@ -313,7 +319,7 @@ size_t CSoundFontSynth::Render(float* pOutBuffer, size_t nFrames)
 	return nFrames;
 }
 
-size_t CSoundFontSynth::Render(s16* pOutBuffer, size_t nFrames)
+size_t CSoundFontSynth::Render(s16 *pOutBuffer, size_t nFrames)
 {
 	m_Lock.Acquire();
 	assert(fluid_synth_write_s16(m_pSynth, nFrames, pOutBuffer, 0, 2, pOutBuffer, 1, 2) == FLUID_OK);
@@ -327,7 +333,7 @@ void CSoundFontSynth::ReportStatus() const
 		m_pUI->ShowSystemMessage(m_SoundFontManager.GetSoundFontName(m_nCurrentSoundFontIndex));
 }
 
-void CSoundFontSynth::UpdateLCD(CLCD& LCD, unsigned int nTicks)
+void CSoundFontSynth::UpdateLCD(CLCD &LCD, unsigned int nTicks)
 {
 	const u8 nBarHeight = LCD.Height();
 	float ChannelLevels[16], PeakLevels[16];
@@ -346,7 +352,7 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	}
 
 	// Get SoundFont if available
-	const char* pSoundFontPath = m_SoundFontManager.GetSoundFontPath(nIndex);
+	const char *pSoundFontPath = m_SoundFontManager.GetSoundFontPath(nIndex);
 	if (!pSoundFontPath)
 	{
 		if (m_pUI)
@@ -377,9 +383,9 @@ bool CSoundFontSynth::SwitchSoundFont(size_t nIndex)
 	return true;
 }
 
-bool CSoundFontSynth::Reinitialize(const char* pSoundFontPath, const TFXProfile* pFXProfile)
+bool CSoundFontSynth::Reinitialize(const char *pSoundFontPath, const TFXProfile *pFXProfile)
 {
-	const CConfig* const pConfig = CConfig::Get();
+	const CConfig *const pConfig = CConfig::Get();
 
 	m_Lock.Acquire();
 
@@ -463,32 +469,30 @@ void CSoundFontSynth::DumpFXSettings() const
 	LOGNOTE("Gain: %.2f", nGain);
 
 	LOGNOTE("Reverb: %.2f, %.2f, %.2f, %.2f",
-		nReverbDamping,
-		nReverbLevel,
-		nReverbRoomSize,
-		nReverbWidth
-	);
+			nReverbDamping,
+			nReverbLevel,
+			nReverbRoomSize,
+			nReverbWidth);
 
 	LOGNOTE("Chorus: %.2f, %.2f, %d, %.2f",
-		nChorusDepth,
-		nChorusLevel,
-		nChorusVoices,
-		nChorusSpeed
-	);
+			nChorusDepth,
+			nChorusLevel,
+			nChorusVoices,
+			nChorusSpeed);
 }
 #endif
 
-bool CSoundFontSynth::ParseGMSysEx(const u8* pData, size_t nSize)
+bool CSoundFontSynth::ParseGMSysEx(const u8 *pData, size_t nSize)
 {
 	// Must be at least size of header plus Start/End of Exclusive bytes
 	if (nSize < sizeof(TGMSysExHeader) + 2)
 		return false;
 
-	const auto& Header = reinterpret_cast<const TGMSysExHeader&>(pData[1]);
+	const auto &Header = reinterpret_cast<const TGMSysExHeader &>(pData[1]);
 
 	if (Header.ManufacturerID == TManufacturerID::UniversalNonRealTime &&
-	    Header.DeviceID == TDeviceID::AllCall &&
-	    Header.SubID1 == TUniversalSubID::GeneralMIDI)
+		Header.DeviceID == TDeviceID::AllCall &&
+		Header.SubID1 == TUniversalSubID::GeneralMIDI)
 	{
 		// GM Mode On/Off
 		if (Header.SubID2 == TGMSubID::GeneralMIDIOn || Header.SubID2 == TGMSubID::GeneralMIDIOff)
@@ -501,16 +505,16 @@ bool CSoundFontSynth::ParseGMSysEx(const u8* pData, size_t nSize)
 	return false;
 }
 
-bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
+bool CSoundFontSynth::ParseRolandSysEx(const u8 *pData, size_t nSize)
 {
 	// Must be at least size of header plus a data byte, a checksum byte, and Start/End of Exclusive bytes
 	if (nSize < sizeof(TRolandSysExHeader) + 4)
 		return false;
 
-	const auto& Header = reinterpret_cast<const TRolandSysExHeader&>(pData[1]);
+	const auto &Header = reinterpret_cast<const TRolandSysExHeader &>(pData[1]);
 	const u32 nAddressHiMed = Header.Address[0] << 16 | Header.Address[1] << 8;
 	const u8 nAddressLo = Header.Address[2];
-	const u8* pRolandData = pData + sizeof(TRolandSysExHeader) + 1;
+	const u8 *pRolandData = pData + sizeof(TRolandSysExHeader) + 1;
 	const size_t nRolandDataSize = nSize - sizeof(TRolandSysExHeader) - 3;
 	const u8 nChecksum = pData[nSize - 2];
 
@@ -535,7 +539,7 @@ bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
 		{
 			// TODO: If FluidSynth had an API to query the channel mode we wouldn't need to keep track of it
 			const u8 nChannel = Header.Address[1] & 0x0F;
-			const u8 nMode    = *pRolandData ? 1 : 0;
+			const u8 nMode = *pRolandData ? 1 : 0;
 			m_nPercussionMask ^= (-nMode ^ m_nPercussionMask) & (1 << nChannel);
 
 			// Don't consume; forward to FluidSynth
@@ -565,16 +569,16 @@ bool CSoundFontSynth::ParseRolandSysEx(const u8* pData, size_t nSize)
 	return false;
 }
 
-bool CSoundFontSynth::ParseYamahaSysEx(const u8* pData, size_t nSize)
+bool CSoundFontSynth::ParseYamahaSysEx(const u8 *pData, size_t nSize)
 {
 	// Must be at least size of header plus a data byte and Start/End of Exclusive bytes
 	if (nSize < sizeof(TYamahaSysExHeader) + 3)
 		return false;
 
-	const auto& Header = reinterpret_cast<const TYamahaSysExHeader&>(pData[1]);
+	const auto &Header = reinterpret_cast<const TYamahaSysExHeader &>(pData[1]);
 	const u32 nAddressHiMed = Header.Address[0] << 16 | Header.Address[1] << 8;
 	const u8 nAddressLo = Header.Address[2];
-	const u8* pYamahaData = pData + sizeof(TYamahaSysExHeader) + 1;
+	const u8 *pYamahaData = pData + sizeof(TYamahaSysExHeader) + 1;
 	const size_t nYamahaDataSize = nSize - sizeof(TYamahaSysExHeader) - 2;
 
 	if (Header.ManufacturerID != TManufacturerID::Yamaha)

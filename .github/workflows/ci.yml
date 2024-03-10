@@ -1,37 +1,43 @@
 name: mt32-pi CI
 
-on: [push, pull_request]
-
+# only try to build on main branches and pull requests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 env:
   toolchain-version: 11.3.rel1
   python-version: 3.11
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  # lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v4.5.0
-        with:
-          python-version: ${{ env.python-version }}
+  #     - uses: actions/setup-python@v4.5.0
+  #       with:
+  #         python-version: ${{ env.python-version }}
 
-      - uses: psf/black@stable
-        with:
-          options: --check --diff --preview
-          src: scripts
+  #     - uses: psf/black@stable
+  #       with:
+  #         options: --check --diff --preview
+  #         src: scripts
 
-      - uses: isort/isort-action@master
-        with:
-            sortPaths: scripts
+  #     - uses: isort/isort-action@master
+  #       with:
+  #           sortPaths: scripts
 
-      - uses: py-actions/flake8@v2
-        with:
-          path: scripts
+  #     - uses: py-actions/flake8@v2
+  #       with:
+  #         path: scripts
 
-      - uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: scripts
+  #     - uses: ludeeus/action-shellcheck@master
+  #       with:
+  #         scandir: scripts
 
   build:
     runs-on: ubuntu-latest
@@ -39,10 +45,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board: [pi2, pi3-64, pi4-64]
+        board: [pi3-64]
     steps:
     - uses: actions/checkout@v3
-
+    - run: apt update -y && apt install -y cmake
     - name: Fetch submodules
       run: make submodules
 

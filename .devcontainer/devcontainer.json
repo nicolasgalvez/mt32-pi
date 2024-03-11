@@ -11,7 +11,8 @@
 				"twxs.cmake",
 				"ms-vscode.cmake-tools",
 				"ms-vscode.makefile-tools",
-				"github.vscode-github-actions"
+				"github.vscode-github-actions",
+				"donjayamanne.githistory"
 			]
 		}
 	}

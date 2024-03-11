@@ -1220,7 +1220,7 @@ void CMT32Pi::SetSoundFontPatch(s32 nPatch)
 
 	// Set the patch using fluidsynth library
 	if (m_pSoundFontSynth)
-		m_pSoundFontSynth->SetSoundFontPatch(nPatch, 1, 1);
+		m_pSoundFontSynth->SetSoundFontPatch(nPatch, 1, 0);
 }
 
 

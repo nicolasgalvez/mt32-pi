@@ -20,6 +20,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      # - run: apt update 
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4.5.0
@@ -55,11 +56,11 @@ jobs:
     # - run: apt update -y && apt install -y cmake
     - name: Fetch submodules
       run: make submodules
-
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ env.toolchain-version }}-${{ matrix.board }}
+        # create-symlink: true
 
     - name: Cache ARM toolchains
       id: cache-toolchains
@@ -196,19 +197,19 @@ jobs:
             ${{ env.wlan-home }}/firmware/brcmfmac43456-sdio.clm_blob \
             sdcard/firmware
 
-    - name: Cache GeneralUser GS SoundFont
-      id: cache-generaluser-gs
-      uses: actions/cache@v3
-      with:
-        path: GeneralUser GS v1.511
-        key: cache-generaluser-gs-1.511
+    # - name: Cache GeneralUser GS SoundFont
+    #   id: cache-generaluser-gs
+    #   uses: actions/cache@v3
+    #   with:
+    #     path: GeneralUser GS v1.511
+    #     key: cache-generaluser-gs-1.511
 
-    - name: Download GeneralUser GS SoundFont if not retrieved from cache
-      if: steps.cache-generaluser-gs.outputs.cache-hit != 'true'
-      run: |
-        sudo pip install gdown
-        gdown -q https://drive.google.com/uc?id=1ypgJwuHqqXx-jeCXLRFqgBAEemJZnDrj
-        unzip "GeneralUser GS v1.511.zip"
+    # - name: Download GeneralUser GS SoundFont if not retrieved from cache
+    #   if: steps.cache-generaluser-gs.outputs.cache-hit != 'true'
+    #   run: |
+    #     sudo pip install gdown
+    #     gdown -q https://drive.google.com/uc?id=1ypgJwuHqqXx-jeCXLRFqgBAEemJZnDrj
+    #     unzip "GeneralUser GS v1.511.zip"
 
     - name: Retrieve built kernels
       uses: actions/download-artifact@v3
@@ -216,14 +217,14 @@ jobs:
         name: kernels
         path: sdcard
 
-    - name: Add extra files to SD card directory
-      run: |
-        mkdir sdcard/docs
-        cp "GeneralUser GS v1.511/GeneralUser GS v1.511.sf2" sdcard/soundfonts
-        cp "GeneralUser GS v1.511/CHANGELOG.md" sdcard/docs/CHANGELOG.GeneralUserGS
-        cp "GeneralUser GS v1.511/LICENSE.txt" sdcard/docs/LICENSE.GeneralUserGS
-        cp LICENSE sdcard/docs
-        cp README.md sdcard/docs
+    # - name: Add extra files to SD card directory
+    #   run: |
+    #     mkdir sdcard/docs
+    #     cp "GeneralUser GS v1.511/GeneralUser GS v1.511.sf2" sdcard/soundfonts
+    #     cp "GeneralUser GS v1.511/CHANGELOG.md" sdcard/docs/CHANGELOG.GeneralUserGS
+    #     cp "GeneralUser GS v1.511/LICENSE.txt" sdcard/docs/LICENSE.GeneralUserGS
+    #     cp LICENSE sdcard/docs
+    #     cp README.md sdcard/docs
 
     - name: Upload SD card archive
       uses: actions/upload-artifact@v3
@@ -252,7 +253,14 @@ jobs:
       with:
         args: |
             mt32-pi-*.zip
-
+    - name: Release
+      uses: docker://antonyurchenko/git-release:latest
+      if: startsWith(github.ref, 'refs/branches/dev')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        args: |
+            mt32-pi-*.zip
     # - name: Notify Discord servers of release
     #   if: startsWith(github.ref, 'refs/tags/')
     #   run: |
